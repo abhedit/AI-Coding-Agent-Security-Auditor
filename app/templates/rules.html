@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sev %}
+{% block title %}Rule catalog{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>Rule catalog</h1>
+  <p class="muted">{{ rules|length }} rules. Suppress a line in instruction files with <code>agent-auditor: ignore</code>, a whole file with <code>agent-auditor: ignore-file</code>, or disable rules per project.</p>
+  <input class="filter" type="search" placeholder="Filter rules…" data-filter=".rule-row">
+  <table class="table">
+    <thead><tr><th>ID</th><th>Severity</th><th>Category</th><th>Rule</th></tr></thead>
+    <tbody>
+    {% for r in rules %}
+      <tr class="rule-row" id="{{ r.id }}">
+        <td><code>{{ r.id }}</code></td><td>{{ sev(r.severity) }}</td><td>{{ r.category }}</td>
+        <td><strong>{{ r.title }}</strong><p class="small">{{ r.description }}</p><p class="small fix"><strong>Fix:</strong> {{ r.remediation }}</p>
+          {% for ref in r.references %}<a class="small" href="{{ ref }}" rel="noopener noreferrer" target="_blank">Reference ↗</a> {% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

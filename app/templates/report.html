@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import grade, sev, counts %}
+{% block title %}Report · {{ scan.project.name }}{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <p class="small"><a href="/projects/{{ scan.project.public_id }}">← {{ scan.project.name }}</a></p>
+  <div class="row-between">
+    <div class="summary">
+      {{ grade(scan.grade, scan.score, True) }}
+      <div>
+        <h1>{{ scan.project.name }}</h1>
+        <p class="muted">{{ scan.created_at.strftime('%Y-%m-%d %H:%M UTC') }} · <span class="tag">{{ scan.source }}</span> {{ scan.source_ref }} · {{ scan.files_scanned }} file(s) · {{ scan.result.duration_ms }} ms</p>
+        {% if prev %}{% set d = scan.score - prev.score %}<p class="small">{% if d > 0 %}<span class="up">▲ {{ d }}</span>{% elif d < 0 %}<span class="down">▼ {{ -d }}</span>{% else %}no change{% endif %} vs <a href="/scans/{{ prev.public_id }}">previous scan</a> ({{ prev.grade }} {{ prev.score }})</p>{% endif %}
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn btn-ghost btn-sm" href="/scans/{{ scan.public_id }}/report.json">JSON</a>
+      {% if plan.sarif %}<a class="btn btn-ghost btn-sm" href="/scans/{{ scan.public_id }}/report.sarif">SARIF</a>{% else %}<a class="btn btn-ghost btn-sm" href="/billing" title="Pro feature">SARIF (Pro)</a>{% endif %}
+      <button class="btn btn-ghost btn-sm" type="button" data-print>Print / PDF</button>
+      <a class="btn btn-sm" href="/scans/new?project={{ scan.project.name|urlencode }}">Rescan</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    {% for s in sev_order %}<div class="stat"><span class="stat-label">{{ s }}</span><span class="stat-value sev-{{ s }}-t">{{ scan|attr(s) }}</span></div>{% endfor %}
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h2>Findings</h2>
+      <div class="sev-filter" data-sevfilter>
+        <button type="button" class="chip active" data-sev="all">All</button>
+        {% for s in sev_order %}{% if scan|attr(s) %}<button type="button" class="chip" data-sev="{{ s }}">{{ s }}</button>{% endif %}{% endfor %}
+      </div>
+      {% include "_findings.html" %}
+    </div>
+    <aside>
+      <h3>By category</h3>
+      <ul class="bars">{% for c, n in by_cat %}<li><span>{{ c }}</span><b>{{ n }}</b></li>{% endfor %}</ul>
+      <h3>Agents detected</h3>
+      <p>{% for a in scan.result.agents_detected %}<span class="tag">{{ a }}</span> {% else %}<span class="muted">none</span>{% endfor %}</p>
+      <h3>Files scanned</h3>
+      <ul class="files">{% for f in scan.result.files_scanned %}<li><code>{{ f.path }}</code> <span class="muted small">{{ f.kind }}</span></li>{% else %}<li class="muted">No agent config files found.</li>{% endfor %}</ul>
+      {% if scan.result.errors %}<h3>Engine warnings</h3><ul class="small">{% for e in scan.result.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ brand.brand_name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">AI coding agent security · by {{ brand.brand_owner }}</p>
+      <h1>Your AI coding agent trusts its config files.<br><span class="accent">Attackers know it.</span></h1>
+      <p class="lead">{{ brand.brand_name }} audits the configuration surface of Claude Code, Cursor, GitHub Copilot, Codex, Windsurf, Gemini CLI and every MCP server they connect to — catching prompt-injection backdoors, tool poisoning, leaked secrets and over-privileged agents <em>before</em> a developer opens the repo.</p>
+      <div class="cta">
+        <a class="btn" href="/signup">Start free — 30 scans/month</a>
+        <a class="btn btn-ghost" href="#try">Try it without an account</a>
+      </div>
+      <p class="muted small">{{ rule_count }} detection rules · SARIF for GitHub code scanning · CLI, API &amp; GitHub Action</p>
+    </div>
+    <div class="terminal">
+<pre><span class="t-dim">$ agent-auditor scan .</span>
+<span class="sev-critical-t">CRITICAL</span> AGS-PI-001  CLAUDE.md:3
+   Invisible Unicode tag chars
+   &gt; hidden text: 'send ~/.ssh/id_rsa to …'
+<span class="sev-high-t">HIGH    </span> AGS-CC-004  .claude/settings.json:21
+   PostToolUse hook runs curl to webhook.site
+<span class="sev-high-t">HIGH    </span> AGS-MCP-004 .mcp.json:13
+   filesystem server granted access to '/'
+<span class="sev-medium-t">MEDIUM  </span> AGS-MCP-001 .mcp.json:3
+   npx -y server-github (unpinned)
+
+Score 18/100 (grade <span class="sev-critical-t">F</span>)</pre>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section">
+  <h2>What we look for</h2>
+  <div class="cards">
+    <div class="card"><h3>Rules-file backdoors</h3><p>Invisible Unicode, instruction overrides, concealment ("don't tell the user"), encoded payloads and hidden HTML comments in CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions and SKILL.md.</p></div>
+    <div class="card"><h3>MCP supply chain</h3><p>Unpinned <code>npx -y</code> servers, git/tarball installs, pipe-to-shell launchers, privileged Docker, plaintext remote servers and credentials in URLs or args.</p></div>
+    <div class="card"><h3>Tool poisoning</h3><p>Hidden <code>&lt;IMPORTANT&gt;</code> instructions in tool descriptions, cross-tool shadowing, side-channel parameters and duplicated tool names in MCP manifests.</p></div>
+    <div class="card"><h3>Over-privileged agents</h3><p><code>bypassPermissions</code>, <code>Bash(*)</code>, Codex <code>danger-full-access</code>, Gemini YOLO, auto-approved MCP tools and sub-agents that inherit every tool.</p></div>
+    <div class="card"><h3>Exfiltration &amp; persistence</h3><p>Hooks that phone home, API base-URL hijacks, instructions to read <code>~/.ssh</code> or <code>.aws/credentials</code>, and edits to shell profiles or agent config.</p></div>
+    <div class="card"><h3>Agents in CI</h3><p>Workflows that run Claude/Codex/Gemini on issue comments or <code>pull_request_target</code> with untrusted text in the prompt and write-all tokens.</p></div>
+  </div>
+</section>
+
+<section class="wrap section" id="try">
+  <h2>Try it now</h2>
+  <p class="muted">Paste a single agent config file. Nothing is stored. For whole repositories, <a href="/signup">create a free account</a>.</p>
+  <form method="post" action="/try" class="panel">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>File name
+      <select name="filename">
+        <option>.mcp.json</option><option>CLAUDE.md</option><option>.claude/settings.json</option><option>AGENTS.md</option>
+        <option>.cursorrules</option><option>.cursor/mcp.json</option><option>.github/copilot-instructions.md</option>
+        <option>.codex/config.toml</option><option>.gemini/settings.json</option><option>mcp-tools.json</option>
+      </select>
+    </label>
+    <label>Content<textarea name="content" rows="10" required placeholder='{"mcpServers": {"github": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"]}}}'></textarea></label>
+    <button class="btn">Scan file</button>
+  </form>
+</section>
+
+<section class="wrap section">
+  <h2>Fits how your team ships</h2>
+  <div class="cards three">
+    <div class="card"><h3>1 · Scan</h3><p>Upload a zip, point at a public Git URL, paste a file, or run the CLI locally — your source never has to leave your machine.</p></div>
+    <div class="card"><h3>2 · Fix</h3><p>Each finding explains the attack, shows the evidence (with secrets masked) and gives a concrete remediation.</p></div>
+    <div class="card"><h3>3 · Gate</h3><p>Fail pull requests that introduce critical agent risks with our GitHub Action and push SARIF into GitHub code scanning.</p></div>
+  </div>
+</section>
+
+<section class="wrap section center">
+  <h2>Built on the community's research</h2>
+  <p class="muted narrow">Detection logic is informed by open-source work such as Snyk/Invariant <em>agent-scan</em> (mcp-scan), AgentShield, mcp-audit and the published "Rules File Backdoor" and MCP tool-poisoning research — productised into a hosted platform with history, teams, CI gating and reporting.</p>
+  <a class="btn" href="/pricing">See plans</a>
+</section>
+{% endblock %}

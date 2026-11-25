@@ -1,0 +1,17 @@
+{% from "_macros.html" import sev %}
+{% set fl = findings if findings is defined else result.findings %}
+{% if not fl %}
+<div class="empty">✓ No findings. Nice and tidy.</div>
+{% endif %}
+<div class="findings">
+{% for f in fl %}
+<details class="finding" {% if loop.index <= 3 %}open{% endif %} data-sev="{{ f.severity }}">
+  <summary>{{ sev(f.severity) }} <strong>{{ f.title }}</strong> <span class="loc">{{ f.file }}:{{ f.line }}</span> <span class="rid">{{ f.rule_id }}</span></summary>
+  <div class="fbody">
+    <p>{{ f.message }}</p>
+    {% if f.evidence %}<pre class="evidence">{{ f.evidence }}</pre>{% endif %}
+    <p class="fix"><strong>Fix:</strong> {{ f.remediation }}</p>
+  </div>
+</details>
+{% endfor %}
+</div>

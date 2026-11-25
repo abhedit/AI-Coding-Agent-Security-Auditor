@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-auditor"
+version = "0.1.0"
+description = "Static security auditor for AI coding agent configurations (Claude Code, Cursor, Copilot, Codex, Windsurf, Gemini CLI, MCP)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "Abhijit" }]
+dependencies = []   # the scan engine + CLI are pure standard library
+
+[project.optional-dependencies]
+server = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "sqlalchemy>=2.0", "jinja2>=3.1", "python-multipart>=0.0.9", "itsdangerous>=2.1", "httpx>=0.27", "psycopg[binary]>=3.1"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+agent-auditor = "auditor.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["auditor*", "app*"]
+
+[tool.setuptools.package-data]
+app = ["templates/*.html", "static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

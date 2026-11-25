@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ brand.brand_name }}{% endblock %} · {{ brand.brand_tagline }}</title>
+<meta name="description" content="{{ brand.brand_name }} by {{ brand.brand_owner }} audits Claude Code, Cursor, Copilot, Codex, Windsurf and MCP configurations for prompt injection, tool poisoning, secret leaks and over-privileged agents.">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="logo" href="/"><img src="/static/logo.svg" alt="" width="26" height="26"> {{ brand.brand_name }}<span class="by">by {{ brand.brand_owner }}</span></a>
+    <nav>
+      {% if user %}
+        <a href="/dashboard">Dashboard</a>
+        <a href="/scans/new">New scan</a>
+        <a href="/rules">Rules</a>
+        <a href="/docs">Docs</a>
+        <a href="/settings">Settings</a>
+        <a href="/billing">Billing</a>
+        {% if user.is_admin %}<a href="/admin">Admin</a>{% endif %}
+        <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">Log out</button></form>
+      {% else %}
+        <a href="/rules">Rules</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/docs">Docs</a>
+        <a href="/login">Log in</a>
+        <a class="btn btn-sm" href="/signup">Start free</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+<main>
+{% if flash %}<div class="wrap"><div class="flash flash-{{ flash.kind }}">{{ flash.msg }}</div></div>{% endif %}
+{% block content %}{% endblock %}
+</main>
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <div><strong>{{ brand.brand_name }}</strong> — an offering by {{ brand.brand_owner }}. Engine v{{ version }}.</div>
+    <div><a href="/rules">Rule catalog</a> · <a href="/docs">Docs</a> · <a href="/api/docs">API</a> · <a href="/pricing">Pricing</a> · <a href="mailto:{{ brand.contact_email }}">Contact</a></div>
+  </div>
+</footer>
+</body>
+</html>

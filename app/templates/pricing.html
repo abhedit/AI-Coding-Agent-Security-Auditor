@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1 class="center">Simple pricing</h1>
+  <p class="center muted">Every plan runs the full rule set. Pay for volume, history and team features.</p>
+  <div class="plans">
+  {% for p in plans.values() %}
+    <div class="plan {% if p.id == 'pro' %}plan-hot{% endif %}">
+      <h3>{{ p.name }}</h3>
+      <div class="price">{% if p.price_month is none %}Custom{% elif p.price_month == 0 %}Free{% else %}${{ p.price_month }}<small>/month</small>{% endif %}</div>
+      <ul>{% for f in p.features %}<li>{{ f }}</li>{% endfor %}</ul>
+      {% if p.id == 'enterprise' %}
+        <a class="btn btn-ghost" href="mailto:{{ brand.contact_email }}?subject={{ brand.brand_name }}%20Enterprise">Talk to {{ brand.brand_owner }}</a>
+      {% elif user %}
+        <a class="btn {% if p.id != 'pro' %}btn-ghost{% endif %}" href="/billing">Choose {{ p.name }}</a>
+      {% else %}
+        <a class="btn {% if p.id != 'pro' %}btn-ghost{% endif %}" href="/signup?plan={{ p.id }}">Get started</a>
+      {% endif %}
+    </div>
+  {% endfor %}
+  </div>
+  <div class="panel">
+    <h3>Professional services by {{ brand.brand_owner }}</h3>
+    <p>Need a deeper look? Book a hands-on AI coding agent security review: threat-modelling your agent workflows, hardening Claude Code / Cursor / Copilot policies, MCP server vetting and secure CI agent design.</p>
+    <a class="btn btn-ghost" href="mailto:{{ brand.contact_email }}?subject=Agent%20security%20review">Request a review</a>
+  </div>
+</section>
+{% endblock %}

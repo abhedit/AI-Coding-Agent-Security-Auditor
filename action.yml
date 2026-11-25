@@ -1,0 +1,33 @@
+name: "AI Coding Agent Security Auditor"
+description: "Audit Claude Code, Cursor, Copilot, Codex, Windsurf, Gemini CLI and MCP configuration for prompt injection, tool poisoning, secrets and over-privilege."
+author: "Abhijit"
+branding: { icon: "shield", color: "purple" }
+inputs:
+  path: { description: "Directory to scan", default: "." }
+  fail-on: { description: "critical|high|medium|low|info|none", default: "high" }
+  sarif-file: { description: "Where to write SARIF", default: "agent-auditor.sarif" }
+  api-key: { description: "Optional SaaS API key to record results in the dashboard", default: "" }
+  api-url: { description: "SaaS base URL", default: "" }
+  project: { description: "Project name in the dashboard", default: "${{ github.repository }}" }
+outputs:
+  sarif-file: { description: "Path of the SARIF report", value: "${{ inputs.sarif-file }}" }
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with: { python-version: "3.12" }
+    - shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+    - shell: bash
+      env:
+        SCAN_PATH: ${{ inputs.path }}
+        SARIF: ${{ inputs.sarif-file }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        AGENT_AUDITOR_API_KEY: ${{ inputs.api-key }}
+        AGENT_AUDITOR_API_URL: ${{ inputs.api-url }}
+        AGENT_AUDITOR_PROJECT: ${{ inputs.project }}
+      run: |
+        agent-auditor scan "$SCAN_PATH" --fail-on none
+        REMOTE=""
+        if [ -n "$AGENT_AUDITOR_API_KEY" ] && [ -n "$AGENT_AUDITOR_API_URL" ]; then REMOTE="--remote"; fi
+        agent-auditor scan "$SCAN_PATH" -f sarif -o "$SARIF" --fail-on "$FAIL_ON" $REMOTE

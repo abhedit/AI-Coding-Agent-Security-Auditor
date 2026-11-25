@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}New scan{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>New scan</h1>
+  <p class="muted">{{ used }} of {{ plan.scans_per_month if plan.scans_per_month < 10**8 else 'unlimited' }} scans used this month on {{ plan.name }}.</p>
+  <div class="tabs" data-tabs>
+    <button type="button" class="tab active" data-tab="git">Public Git repo</button>
+    <button type="button" class="tab" data-tab="upload">Upload .zip</button>
+    <button type="button" class="tab" data-tab="paste">Paste a file</button>
+  </div>
+  <datalist id="projects">{% for p in projects %}<option value="{{ p.name }}">{% endfor %}</datalist>
+
+  <form method="post" action="/scans/new" class="panel tab-panel" data-panel="git">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="mode" value="git">
+    <label>Repository URL<input name="git_url" type="url" placeholder="https://github.com/owner/repo" required></label>
+    <label>Project (optional)<input name="project" list="projects" value="{{ project }}" placeholder="defaults to repo name"></label>
+    <p class="small muted">Shallow clone over HTTPS; no hooks, submodules or code are executed. Only agent configuration files are kept.</p>
+    <button class="btn">Scan repository</button>
+  </form>
+
+  <form method="post" action="/scans/new" enctype="multipart/form-data" class="panel tab-panel hidden" data-panel="upload">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="mode" value="upload">
+    <label>Repository archive (.zip, up to {{ brand.max_upload_mb }} MB)<input name="archive" type="file" accept=".zip" required></label>
+    <label>Project (optional)<input name="project" list="projects" value="{{ project }}"></label>
+    <p class="small muted">Tip: GitHub's "Download ZIP" works as-is. Archives are read in memory and discarded.</p>
+    <button class="btn">Upload &amp; scan</button>
+  </form>
+
+  <form method="post" action="/scans/new" class="panel tab-panel hidden" data-panel="paste">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="mode" value="paste">
+    <label>File path<input name="filename" placeholder=".mcp.json, CLAUDE.md, .claude/settings.json …" required></label>
+    <label>Content<textarea name="content" rows="14" required></textarea></label>
+    <label>Project (optional)<input name="project" list="projects" value="{{ project }}"></label>
+    <button class="btn">Scan file</button>
+  </form>
+
+  <div class="panel">
+    <h3>Prefer to keep code on your machine?</h3>
+    <p>Run the CLI locally and upload only the findings history: <code>agent-auditor scan . --remote</code>. See <a href="/docs">Docs</a>.</p>
+  </div>
+</section>
+{% endblock %}

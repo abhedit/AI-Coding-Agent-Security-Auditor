@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_macros.html" import grade, counts %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <div class="row-between">
+    <h1>{{ org.name }}</h1>
+    <a class="btn" href="/scans/new">New scan</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="stat-label">Posture</span>{% if avg_score is not none %}<span class="stat-value">{{ avg_score }}<small>/100</small></span>{% else %}<span class="stat-value muted">—</span>{% endif %}</div>
+    <div class="stat"><span class="stat-label">Open critical</span><span class="stat-value sev-critical-t">{{ open_counts.critical }}</span></div>
+    <div class="stat"><span class="stat-label">Open high</span><span class="stat-value sev-high-t">{{ open_counts.high }}</span></div>
+    <div class="stat"><span class="stat-label">Scans this month</span><span class="stat-value">{{ used }}<small>/{{ plan.scans_per_month if plan.scans_per_month < 10**8 else '∞' }}</small></span></div>
+    <div class="stat"><span class="stat-label">Plan</span><span class="stat-value">{{ plan.name }}</span>{% if plan.id == 'free' %}<a class="small" href="/billing">Upgrade →</a>{% endif %}</div>
+  </div>
+
+  <h2>Projects</h2>
+  {% if not projects %}
+    <div class="empty">No projects yet. <a href="/scans/new">Run your first scan</a> — upload a zip, paste a file or scan a public Git repo.</div>
+  {% else %}
+  <table class="table">
+    <thead><tr><th>Project</th><th>Latest grade</th><th>Open findings</th><th>Last scan</th><th></th></tr></thead>
+    <tbody>
+    {% for p in projects %}{% set s = latest[p.id] %}
+      <tr>
+        <td><a href="/projects/{{ p.public_id }}"><strong>{{ p.name }}</strong></a>{% if p.repo_url %}<br><span class="small muted">{{ p.repo_url }}</span>{% endif %}</td>
+        <td>{% if s %}{{ grade(s.grade, s.score) }}{% else %}—{% endif %}</td>
+        <td>{% if s %}{{ counts(s) }}{% if not s.total %}<span class="muted">none</span>{% endif %}{% endif %}</td>
+        <td>{% if s %}<a href="/scans/{{ s.public_id }}">{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</a>{% endif %}</td>
+        <td><a class="small" href="/scans/new?project={{ p.name|urlencode }}">Rescan</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <h2>Recent scans</h2>
+  {% if recent %}
+  <table class="table">
+    <thead><tr><th>When</th><th>Project</th><th>Source</th><th>Grade</th><th>Findings</th></tr></thead>
+    <tbody>
+    {% for s in recent %}
+      <tr><td><a href="/scans/{{ s.public_id }}">{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</a></td><td>{{ s.project.name }}</td>
+      <td><span class="tag">{{ s.source }}</span></td><td>{{ grade(s.grade, s.score) }}</td><td>{{ counts(s) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No scans yet.</p>{% endif %}
+</section>
+{% endblock %}

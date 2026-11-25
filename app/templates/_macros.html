@@ -1,0 +1,9 @@
+{% macro grade(g, score=None, big=False) -%}
+<span class="grade grade-{{ g }}{% if big %} grade-big{% endif %}">{{ g }}{% if score is not none %}<small>{{ score }}</small>{% endif %}</span>
+{%- endmacro %}
+{% macro sev(s) -%}<span class="sev sev-{{ s }}">{{ s }}</span>{%- endmacro %}
+{% macro counts(o) -%}
+<span class="counts">
+{% for s in ['critical','high','medium','low'] %}{% set n = o[s] if o is mapping else o|attr(s) %}{% if n %}<span class="pill sev-{{ s }}">{{ n }} {{ s[0]|upper }}</span>{% endif %}{% endfor %}
+</span>
+{%- endmacro %}

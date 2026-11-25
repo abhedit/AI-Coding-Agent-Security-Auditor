@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>Operator console</h1>
+  <div class="stats">
+    <div class="stat"><span class="stat-label">Workspaces</span><span class="stat-value">{{ stats.orgs }}</span></div>
+    <div class="stat"><span class="stat-label">Users</span><span class="stat-value">{{ stats.users }}</span></div>
+    <div class="stat"><span class="stat-label">Total scans</span><span class="stat-value">{{ stats.scans }}</span></div>
+    <div class="stat"><span class="stat-label">List MRR</span><span class="stat-value">${{ stats.mrr }}</span></div>
+  </div>
+  {% if upgrade_requests %}
+  <h2>Upgrade requests</h2>
+  <table class="table small"><tbody>{% for e in upgrade_requests %}<tr><td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>org #{{ e.org_id }} · {{ owners.get(e.org_id, '') }}</td><td>{{ e.detail }}</td></tr>{% endfor %}</tbody></table>
+  {% endif %}
+  <h2>Workspaces</h2>
+  <table class="table">
+    <thead><tr><th>#</th><th>Name</th><th>Owner</th><th>Scans (month)</th><th>Created</th><th>Plan</th></tr></thead>
+    <tbody>{% for o in orgs %}
+      <tr><td>{{ o.id }}</td><td>{{ o.name }}</td><td>{{ owners.get(o.id, '') }}</td><td>{{ usage[o.id] }}</td><td>{{ o.created_at.strftime('%Y-%m-%d') }}</td>
+      <td><form method="post" action="/admin/orgs/{{ o.id }}/plan" class="row-form tight"><input type="hidden" name="csrf" value="{{ csrf }}">
+        <select name="plan">{% for p in plans.values() %}<option value="{{ p.id }}" {% if p.id == o.plan %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select>
+        <button class="btn btn-sm btn-ghost">Set</button></form></td></tr>
+    {% endfor %}</tbody>
+  </table>
+</section>
+{% endblock %}

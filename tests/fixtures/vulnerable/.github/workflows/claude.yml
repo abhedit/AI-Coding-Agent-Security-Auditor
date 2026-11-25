@@ -1,0 +1,11 @@
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          prompt: "Handle: ${{ github.event.comment.body }}"
+          claude_args: "--dangerously-skip-permissions"

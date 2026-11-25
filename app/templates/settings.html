@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>Settings</h1>
+
+  <h2>API keys</h2>
+  {% if new_key %}
+    <div class="flash flash-ok"><strong>Copy your new key now — it won't be shown again:</strong><pre class="key">{{ new_key }}</pre></div>
+  {% endif %}
+  <form method="post" action="/settings/keys" class="row-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input name="name" placeholder="Key name, e.g. GitHub Actions" required>
+    <button class="btn btn-sm">Create key</button>
+  </form>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Prefix</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+    <tbody>{% for k in keys %}
+      <tr class="{% if k.revoked %}muted{% endif %}"><td>{{ k.name }}</td><td><code>{{ k.prefix }}…</code></td><td>{{ k.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>{{ k.last_used_at.strftime('%Y-%m-%d %H:%M') if k.last_used_at else 'never' }}</td>
+      <td>{% if k.revoked %}revoked{% else %}<form method="post" action="/settings/keys/{{ k.id }}/revoke" class="inline" data-confirm="Revoke this key?"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link danger">Revoke</button></form>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="5" class="muted">No keys yet.</td></tr>{% endfor %}</tbody>
+  </table>
+
+  <h2>Team members <span class="small muted">({{ members|length }}/{{ plan.members if plan.members < 10**5 else '∞' }})</span></h2>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+    <tbody>{% for m in members %}<tr><td>{{ m.name }}</td><td>{{ m.email }}</td><td>{{ m.role }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% if user.role == 'owner' %}
+  <form method="post" action="/settings/members" class="row-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input name="name" placeholder="Name"><input name="email" type="email" placeholder="email@company.com" required>
+    <input name="password" type="password" placeholder="Temporary password (10+)" minlength="10" required>
+    <button class="btn btn-sm">Add member</button>
+  </form>
+  {% endif %}
+
+  <h2>Audit log</h2>
+  <table class="table small">
+    <tbody>{% for e in events %}<tr><td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td><code>{{ e.action }}</code></td><td class="muted">{{ e.detail }}</td></tr>{% else %}<tr><td class="muted">No events.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+{% endblock %}

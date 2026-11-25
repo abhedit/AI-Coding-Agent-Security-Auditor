@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@acme/docs-mcp@1.4.2"
+      ],
+      "env": {
+        "DOCS_TOKEN": "${DOCS_TOKEN}"
+      }
+    },
+    "api": {
+      "url": "https://mcp.acme.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ACME_TOKEN}"
+      }
+    }
+  }
+}

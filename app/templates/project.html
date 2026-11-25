@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import grade, counts %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <div class="row-between">
+    <div><h1>{{ project.name }}</h1>{% if project.repo_url %}<p class="muted">{{ project.repo_url }}</p>{% endif %}</div>
+    <a class="btn" href="/scans/new?project={{ project.name|urlencode }}">New scan</a>
+  </div>
+
+  {% if trend|length > 1 %}
+  <h2>Score trend</h2>
+  {% set w = 760 %}{% set h = 140 %}{% set n = trend|length %}
+  <svg class="trend" viewBox="0 0 {{ w }} {{ h }}" role="img" aria-label="Score trend">
+    <line x1="0" y1="{{ h - 0.9*h }}" x2="{{ w }}" y2="{{ h - 0.9*h }}" class="trend-grid"/>
+    <line x1="0" y1="{{ h - 0.6*h }}" x2="{{ w }}" y2="{{ h - 0.6*h }}" class="trend-grid"/>
+    <polyline class="trend-line" fill="none" points="{% for s in trend %}{{ (loop.index0 * (w - 20) / (n - 1) + 10)|round(1) }},{{ (h - 10 - s.score * (h - 20) / 100)|round(1) }} {% endfor %}"/>
+    {% for s in trend %}<circle class="trend-dot" r="3.5" cx="{{ (loop.index0 * (w - 20) / (n - 1) + 10)|round(1) }}" cy="{{ (h - 10 - s.score * (h - 20) / 100)|round(1) }}"><title>{{ s.created_at.strftime('%Y-%m-%d') }}: {{ s.score }}</title></circle>{% endfor %}
+  </svg>
+  {% endif %}
+
+  <h2>Scan history</h2>
+  <table class="table">
+    <thead><tr><th>When</th><th>Source</th><th>Grade</th><th>Findings</th></tr></thead>
+    <tbody>{% for s in scans %}
+      <tr><td><a href="/scans/{{ s.public_id }}">{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</a></td><td><span class="tag">{{ s.source }}</span> <span class="small muted">{{ s.source_ref }}</span></td><td>{{ grade(s.grade, s.score) }}</td><td>{{ counts(s) }}</td></tr>
+    {% else %}<tr><td colspan="4" class="muted">No scans within your plan's {{ plan.history_days }}-day history window.</td></tr>{% endfor %}</tbody>
+  </table>
+
+  <h2>Settings</h2>
+  <form method="post" action="/projects/{{ project.public_id }}" class="panel">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Disabled rules (comma-separated IDs, e.g. AGS-MCP-007)<input name="disabled_rules" value="{{ project.disabled_rules }}"></label>
+    <label class="check"><input type="checkbox" name="badge_public" value="1" {% if project.badge_public %}checked{% endif %} {% if not plan.badges %}disabled{% endif %}> Public README badge {% if not plan.badges %}<span class="small muted">(Pro)</span>{% endif %}</label>
+    {% if project.badge_public %}
+      <p><img src="/badge/{{ project.public_id }}.svg" alt="badge"></p>
+      <pre class="small">[![agent security]({{ brand.base_url }}/badge/{{ project.public_id }}.svg)]({{ brand.base_url }})</pre>
+    {% endif %}
+    <button class="btn btn-sm">Save</button>
+  </form>
+  {% if user.role == 'owner' %}
+  <form method="post" action="/projects/{{ project.public_id }}/delete" class="inline" data-confirm="Delete this project and all its scans?">
+    <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn btn-danger btn-sm">Delete project</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

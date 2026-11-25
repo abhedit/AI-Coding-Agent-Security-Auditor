@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Docs{% endblock %}
+{% block content %}
+<section class="wrap section prose">
+  <h1>Documentation</h1>
+
+  <h2>What gets scanned</h2>
+  <p>Only files that shape an AI coding agent's behaviour are read — everything else is ignored (and, for zip uploads and Git scans, never stored).</p>
+  <table class="table small">
+    <tr><th>Agent</th><th>Files</th></tr>
+    <tr><td>Claude Code</td><td><code>.mcp.json</code>, <code>.claude/settings*.json</code>, <code>.claude/agents/*.md</code>, <code>.claude/commands/**</code>, <code>.claude/skills/**/SKILL.md</code>, <code>CLAUDE.md</code></td></tr>
+    <tr><td>Cursor</td><td><code>.cursor/mcp.json</code>, <code>.cursor/rules/*.mdc</code>, <code>.cursorrules</code></td></tr>
+    <tr><td>GitHub Copilot / VS Code</td><td><code>.vscode/mcp.json</code>, <code>.github/copilot-instructions.md</code>, <code>.github/instructions/*.instructions.md</code>, <code>.github/prompts/*.prompt.md</code></td></tr>
+    <tr><td>OpenAI Codex</td><td><code>.codex/config.toml</code>, <code>AGENTS.md</code></td></tr>
+    <tr><td>Gemini CLI</td><td><code>.gemini/settings.json</code>, <code>GEMINI.md</code></td></tr>
+    <tr><td>Windsurf, Cline, Roo, Kiro, Amazon Q</td><td><code>.windsurfrules</code>, <code>.windsurf/**</code>, <code>.clinerules</code>, <code>.roo/**</code>, <code>.kiro/**</code>, <code>.amazonq/**</code></td></tr>
+    <tr><td>MCP tool manifests</td><td><code>mcp-tools.json</code> (export of a server's <code>tools/list</code>) for tool-poisoning checks</td></tr>
+    <tr><td>CI</td><td><code>.github/workflows/*.yml</code> that invoke an AI agent</td></tr>
+  </table>
+
+  <h2>CLI (runs locally, nothing uploaded)</h2>
+<pre>pip install "git+https://github.com/abhedit/AI-Coding-Agent-Security-Auditor"
+agent-auditor scan .                       # human-readable
+agent-auditor scan . -f sarif -o agent.sarif
+agent-auditor scan . --fail-on critical    # CI gate
+agent-auditor rules                        # list rules</pre>
+
+  <h2>Record results in {{ brand.brand_name }}</h2>
+  <p>Create an API key under <a href="/settings">Settings</a>, then:</p>
+<pre>export AGENT_AUDITOR_API_KEY=ags_...
+export AGENT_AUDITOR_API_URL={{ brand.base_url }}
+agent-auditor scan . --remote --project my-service</pre>
+  <p>The CLI discovers agent config files locally and uploads only those files.</p>
+
+  <h2>GitHub Action</h2>
+<pre>name: agent-security
+on: [pull_request, push]
+permissions: { contents: read, security-events: write }
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: abhedit/AI-Coding-Agent-Security-Auditor@main
+        with:
+          fail-on: high
+          api-key: ${{ '{{' }} secrets.AGENT_AUDITOR_API_KEY {{ '}}' }}   # optional
+          api-url: {{ brand.base_url }}
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: agent-auditor.sarif }</pre>
+
+  <h2>REST API</h2>
+  <p>Interactive reference: <a href="/api/docs">/api/docs</a>. Authenticate with <code>Authorization: Bearer ags_…</code>.</p>
+<pre>curl -X POST {{ brand.base_url }}/api/v1/scans \
+  -H "Authorization: Bearer $AGENT_AUDITOR_API_KEY" -H "Content-Type: application/json" \
+  -d '{"project":"web","files":{".mcp.json":"{\"mcpServers\":{}}"}}'
+
+curl -X POST {{ brand.base_url }}/api/v1/scans/git -H "Authorization: Bearer $KEY" \
+  -H "Content-Type: application/json" -d '{"url":"https://github.com/owner/repo"}'</pre>
+
+  <h2>Scoring</h2>
+  <p>Scores start at 100. Each finding subtracts its severity weight (critical 25, high 12, medium 5, low 2), with repeats of the same rule discounted. Any critical finding caps the grade at D. Grades: A ≥ 90, B ≥ 75, C ≥ 60, D ≥ 40, F &lt; 40.</p>
+
+  <h2>Limitations</h2>
+  <p>This is static analysis of configuration. It does not execute MCP servers (unlike some tools, it will never start a server from a scanned repo), so tool-poisoning checks need an exported tool manifest. Runtime prompt injection arriving through web pages, issues or tool output requires runtime guardrails in addition to this audit.</p>
+</section>
+{% endblock %}

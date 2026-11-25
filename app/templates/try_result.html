@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import grade, sev %}
+{% block content %}
+<section class="wrap section">
+  <h1>Quick scan: <code>{{ filename }}</code></h1>
+  {% if not recognised %}
+    <div class="flash flash-err">That file name is not a recognised agent configuration file.</div>
+  {% else %}
+  <div class="summary">{{ grade(result.grade, result.score, True) }}
+    <div><strong>{{ result.findings|length }} finding(s)</strong><br><span class="muted">Agents: {{ result.agents_detected|join(', ') or 'generic' }}</span></div>
+  </div>
+  {% include "_findings.html" %}
+  {% endif %}
+  <div class="panel center"><p>Scan whole repositories, keep history and gate pull requests.</p><a class="btn" href="/signup">Create a free account</a></div>
+</section>
+{% endblock %}
